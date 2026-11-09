@@ -5,30 +5,65 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mattbeach.me</title>
 <style>
-  html, body { margin: 0; height: 100%; background: #02060a; color: #5fe3a1; }
+  :root { --bg:#0d0a07; --gold:#e8b33d; --gold-dim:#9a7426; --ember:#ff5a2a; --cream:#f5ead6; --muted:#a89880; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
   body {
+    min-height: 100vh; min-height: 100dvh; overflow: hidden;
+    background: radial-gradient(1200px 800px at 50% -10%, #2a1a0c 0%, var(--bg) 55%) fixed, var(--bg);
+    color: var(--gold);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     font-family: "Courier New", Courier, monospace;
   }
-  h1 {
-    margin: 0 0 1rem; font-size: clamp(1.8rem, 6vw, 3.5rem); letter-spacing: .08em;
-    text-shadow: 0 0 12px rgba(95, 227, 161, .6);
+  .embers { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+  .embers i {
+    position: absolute; bottom: -12px; width: 6px; height: 6px; border-radius: 50%;
+    background: radial-gradient(circle, #ffd27a 0%, var(--ember) 60%, transparent 70%);
+    opacity: 0; animation: rise 12s linear infinite;
   }
+  @keyframes rise {
+    0% { transform: translate(0, 0) scale(var(--s, 1)); opacity: 0; }
+    10% { opacity: .85; }
+    100% { transform: translate(var(--dx, 0), -105vh) scale(0); opacity: 0; }
+  }
+  main { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: 14px; max-width: 100%; }
+  h1 {
+    font-family: Georgia, "Times New Roman", serif; font-weight: 700;
+    font-size: clamp(38px, 9vw, 72px); margin: 0 0 1.2rem; letter-spacing: 2px;
+    background: linear-gradient(100deg, #ffe9b0 0%, var(--gold) 30%, var(--ember) 55%, #ffe9b0 80%, var(--gold) 100%);
+    background-size: 250% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shimmer 5s linear infinite, titleIn .8s cubic-bezier(.2, .8, .3, 1) both;
+  }
+  @keyframes shimmer { to { background-position: -250% 0; } }
+  @keyframes titleIn { from { opacity: 0; letter-spacing: 12px; transform: scale(.94); } to { opacity: 1; letter-spacing: 2px; transform: none; } }
   pre#scene {
-    margin: 0; line-height: 1.05; font-size: clamp(6px, 1.45vw, 15px);
-    white-space: pre; user-select: none;
+    margin: 0; line-height: 1.05; font-size: clamp(5px, 1.4vw, 15px);
+    white-space: pre; user-select: none; color: var(--gold);
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(232, 179, 61, .35)); }
+    50% { filter: drop-shadow(0 0 18px rgba(255, 120, 40, .7)); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    .embers { display: none; }
   }
 </style>
 </head>
 <body>
+<div class="embers" id="embers"></div>
+<main>
 <h1>Mattbeach.me</h1>
-<pre id="scene" aria-label="ASCII animation of a Virginia-class submarine"></pre>
+<pre id="scene" aria-label="ASCII animation of a submarine"></pre>
+</main>
 
 <script>
 (function () {
   var W = 100, H = 24, SURFACE = 2;
 
-  // Virginia-class: long smooth hull, tall sail with sail-mounted planes,
+  // Long smooth hull, tall sail with sail-mounted planes,
   // cruciform stern planes, and a shrouded pump-jet propulsor.
   var SUB = [
     "                 __                                    ",
@@ -37,7 +72,7 @@
     "          ____/ |__|  \\______________________          ",
     "     ____/ ==                                 \\___     ",
     "  __/                                              \\_  ",
-    " (   VIRGINIA  -  SSN 774                            ) ",
+    " (                                                    ) ",
     "  \\__                                              _/  ",
     "     \\____ _________________________________  ___/     ",
     "          \\\\__________________________________//        "
@@ -102,6 +137,17 @@
 
     el.textContent = g.map(function (row) { return row.join(""); }).join("\n");
     t++;
+  }
+
+  var box = document.getElementById("embers");
+  for (var n = 0; n < 16; n++) {
+    var e = document.createElement("i");
+    e.style.left = (Math.random() * 100) + "%";
+    e.style.setProperty("--s", String(0.4 + Math.random() * 0.9));
+    e.style.setProperty("--dx", (-40 + Math.random() * 80) + "px");
+    e.style.animationDuration = (9 + Math.random() * 10) + "s";
+    e.style.animationDelay = (-Math.random() * 14) + "s";
+    box.appendChild(e);
   }
 
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;

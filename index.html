@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mattbeach.me</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #02060a; color: #5fe3a1; }
+  body {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: "Courier New", Courier, monospace;
+  }
+  h1 {
+    margin: 0 0 1rem; font-size: clamp(1.8rem, 6vw, 3.5rem); letter-spacing: .08em;
+    text-shadow: 0 0 12px rgba(95, 227, 161, .6);
+  }
+  pre#scene {
+    margin: 0; line-height: 1.05; font-size: clamp(6px, 1.45vw, 15px);
+    white-space: pre; user-select: none;
+  }
+</style>
+</head>
+<body>
+<h1>Mattbeach.me</h1>
+<pre id="scene" aria-label="ASCII animation of a Virginia-class submarine"></pre>
+
+<script>
+(function () {
+  var W = 100, H = 24, SURFACE = 2;
+
+  // Virginia-class: long smooth hull, tall sail with sail-mounted planes,
+  // cruciform stern planes, and a shrouded pump-jet propulsor.
+  var SUB = [
+    "                 __                                    ",
+    "                |==|                                   ",
+    "               _|  |__                                 ",
+    "          ____/ |__|  \\______________________          ",
+    "     ____/ ==                                 \\___     ",
+    "  __/                                              \\_  ",
+    " (   VIRGINIA  -  SSN 774                            ) ",
+    "  \\__                                              _/  ",
+    "     \\____ _________________________________  ___/     ",
+    "          \\\\__________________________________//        "
+  ];
+  var PROP = ["-<[", "-<(", "-<{", "-<("]; // spinning pump-jet frames
+  var subW = SUB[0].length, subH = SUB.length;
+
+  var bubbles = [];
+  var t = 120;
+  var el = document.getElementById("scene");
+
+  function blank() {
+    var g = [];
+    for (var y = 0; y < H; y++) g.push(new Array(W).fill(" "));
+    return g;
+  }
+  function put(g, x, y, s) {
+    if (y < 0 || y >= H) return;
+    for (var i = 0; i < s.length; i++) {
+      var xx = x + i;
+      if (xx >= 0 && xx < W && s[i] !== " ") g[y][xx] = s[i];
+    }
+  }
+
+  function frame() {
+    var g = blank();
+
+    // water surface
+    var waves = "~-~_";
+    for (var x = 0; x < W; x++) {
+      g[SURFACE][x] = waves[(x + Math.floor(t / 2)) % waves.length];
+      g[SURFACE + 1][x] = (x + Math.floor(t / 3)) % 7 === 0 ? "~" : " ";
+    }
+
+    // sea floor
+    for (var x2 = 0; x2 < W; x2++) {
+      g[H - 1][x2] = ((x2 * 7 + 3) % 5 === 0) ? "^" : "_";
+    }
+
+    // submarine glides left-to-right (bow on the right), with gentle bobbing
+    var span = W + subW + 10;
+    var sx = Math.floor((t * 0.6) % span) - subW - 5;
+    var sy = 7 + Math.round(Math.sin(t / 18) * 1.5);
+    for (var r = 0; r < subH; r++) put(g, sx, sy + r, SUB[r]);
+    // propulsor behind the stern
+    put(g, sx - 3, sy + 6, PROP[Math.floor(t / 2) % PROP.length]);
+
+    // bubbles from the stern
+    if (t % 3 === 0) bubbles.push({ x: sx - 4, y: sy + 6, c: "o" });
+    if (t % 5 === 0) bubbles.push({ x: sx - 5 + (t % 3), y: sy + 5, c: "." });
+    for (var i = bubbles.length - 1; i >= 0; i--) {
+      var b = bubbles[i];
+      if (t % 2 === 0) { b.y -= 1; b.x += (Math.random() < 0.5 ? -1 : 0); }
+      if (b.y <= SURFACE + 1) { bubbles.splice(i, 1); continue; }
+      if (b.x >= 0 && b.x < W && g[b.y][b.x] === " ") g[b.y][b.x] = b.c;
+    }
+
+    // wake lines behind the boat
+    for (var k = 1; k <= 4; k++) {
+      put(g, sx - 6 - k * 3, sy + 6, "-");
+    }
+
+    el.textContent = g.map(function (row) { return row.join(""); }).join("\n");
+    t++;
+  }
+
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  frame();
+  if (!reduce) setInterval(frame, 80);
+})();
+</script>
+</body>
+</html>
